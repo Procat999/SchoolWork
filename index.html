@@ -1,1 +1,247 @@
+import React, { useState } from 'react';
+import { 
+  Menu, Search, Mic, Bell, Home, 
+  Flame, Gamepad2, Clock, ThumbsUp, PlaySquare,
+  Share2, Maximize
+} from 'lucide-react';
 
+// --- MOCK DATA ---
+const CATEGORIES = ['All', 'Action', 'Puzzle', 'Racing', 'Multiplayer', 'Arcade', 'Strategy', 'Sports'];
+
+const MOCK_GAMES = [
+  { 
+    id: "g1", 
+    title: "Neon Cyber Drift", 
+    author: "VelocityGames", 
+    views: "1.2M", 
+    date: "2 months ago", 
+    thumb: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&q=80&w=600&h=340", 
+    avatar: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=100&h=100", 
+    url: "https://browsermc.com/" 
+  },
+  { 
+    id: "g2", 
+    title: "Voxel Builder Pro", 
+    author: "BlockStudios", 
+    views: "850K", 
+    date: "1 week ago", 
+    thumb: "https://images.unsplash.com/photo-1605901309584-818e25960b8f?auto=format&fit=crop&q=80&w=600&h=340", 
+    avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=100&h=100", 
+    url: "https://example.com" 
+  },
+  { 
+    id: "g3", 
+    title: "Space Shooters 3000", 
+    author: "GalaxyDev", 
+    views: "3.4M", 
+    date: "1 year ago", 
+    thumb: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?auto=format&fit=crop&q=80&w=600&h=340", 
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100", 
+    url: "https://example.com" 
+  },
+  {
+    id: "g4",
+    title: "Cozy Puzzle Quest",
+    author: "BrainTease",
+    views: "120K",
+    date: "3 days ago",
+    thumb: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=600&h=340",
+    avatar: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80&w=100&h=100",
+    url: "https://example.com"
+  }
+];
+
+// --- COMPONENTS ---
+
+const Navbar = ({ onHomeClick, toggleSidebar }) => (
+  <nav className="fixed top-0 left-0 right-0 h-14 bg-[#0f0f0f] flex items-center justify-between px-4 z-50 border-b border-gray-800">
+    <div className="flex items-center gap-4">
+      <button onClick={toggleSidebar} className="p-2 hover:bg-gray-800 rounded-full text-white">
+        <Menu size={24} />
+      </button>
+      <div className="flex items-center gap-1 cursor-pointer" onClick={onHomeClick}>
+        <div className="bg-red-600 p-1 rounded-lg">
+          <Gamepad2 size={24} className="text-white" />
+        </div>
+        <span className="text-white text-xl font-bold tracking-tighter hidden sm:block">GameTube</span>
+      </div>
+    </div>
+
+    <div className="hidden md:flex items-center flex-1 max-w-2xl ml-8 gap-4">
+      <div className="flex flex-1 items-center bg-[#121212] border border-gray-700 rounded-full overflow-hidden">
+        <input 
+          type="text" 
+          placeholder="Search games..." 
+          className="w-full bg-transparent text-white px-4 py-2 focus:outline-none"
+        />
+        <button className="bg-[#222222] px-5 py-2 border-l border-gray-700 hover:bg-gray-700 text-gray-300">
+          <Search size={20} />
+        </button>
+      </div>
+      <button className="bg-[#181818] p-2 rounded-full hover:bg-gray-700 text-gray-300">
+        <Mic size={20} />
+      </button>
+    </div>
+
+    <div className="flex items-center gap-2 text-white">
+      <button className="p-2 hover:bg-gray-800 rounded-full">
+        <Bell size={24} />
+      </button>
+      <button className="p-1 hover:bg-gray-800 rounded-full">
+        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center font-bold">U</div>
+      </button>
+    </div>
+  </nav>
+);
+
+const Sidebar = ({ isOpen, activeGame }) => {
+  const links = [
+    { icon: <Home size={22} />, label: "Home" },
+    { icon: <Flame size={22} />, label: "Trending" },
+    { icon: <PlaySquare size={22} />, label: "New" },
+    { divider: true },
+    { icon: <Clock size={22} />, label: "History" },
+    { icon: <ThumbsUp size={22} />, label: "Liked" },
+  ];
+
+  if (activeGame && !isOpen) return null;
+
+  return (
+    <aside className={`fixed left-0 top-14 bottom-0 bg-[#0f0f0f] transition-all duration-200 z-40 ${isOpen ? 'w-60 px-3' : 'w-[72px] px-1'}`}>
+      <div className="py-3">
+        {links.map((link, idx) => link.divider ? (
+          <div key={idx} className="my-3 border-t border-gray-800" />
+        ) : (
+          <button 
+            key={idx} 
+            className={`w-full flex items-center ${isOpen ? 'justify-start px-3 gap-4' : 'justify-center flex-col gap-1'} py-3 rounded-lg hover:bg-gray-800 text-gray-300`}
+          >
+            {link.icon}
+            <span className={isOpen ? 'text-sm' : 'text-[10px]'}>{link.label}</span>
+          </button>
+        ))}
+      </div>
+    </aside>
+  );
+};
+
+const GameGrid = ({ onPlayGame }) => {
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap text-sm font-medium transition-colors ${
+              activeCategory === cat ? 'bg-white text-black' : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 mt-4">
+        {MOCK_GAMES.map(game => (
+          <div key={game.id} className="group cursor-pointer flex flex-col gap-2" onClick={() => onPlayGame(game)}>
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-800">
+              <img src={game.thumb} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+              <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">HTML5</div>
+            </div>
+            <div className="flex gap-3 mt-1">
+              <img src={game.avatar} className="w-9 h-9 rounded-full object-cover" alt="" />
+              <div className="flex flex-col">
+                <h3 className="text-white text-base font-semibold line-clamp-2 leading-tight">{game.title}</h3>
+                <span className="text-gray-400 text-sm mt-1">{game.author}</span>
+                <span className="text-gray-400 text-sm">{game.views} plays • {game.date}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PlayerView = ({ game, onBack }) => {
+  const related = MOCK_GAMES.filter(g => g.id !== game.id);
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 max-w-[1700px] mx-auto">
+      <div className="flex-1">
+        <div className="w-full bg-black rounded-xl overflow-hidden aspect-video relative group border border-gray-800">
+          <iframe 
+            id="game-iframe"
+            title={game.title}
+            src={game.url} 
+            className="w-full h-full border-none"
+            allow="autoplay; fullscreen; gamepad"
+          />
+          <button 
+            onClick={() => document.getElementById('game-iframe').requestFullscreen()}
+            className="absolute bottom-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Maximize size={20} />
+          </button>
+        </div>
+        <div className="mt-4">
+          <h1 className="text-white text-xl font-bold">{game.title}</h1>
+          <div className="flex flex-wrap items-center justify-between mt-3 gap-4 border-b border-gray-800 pb-5">
+            <div className="flex items-center gap-3">
+              <img src={game.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+              <div>
+                <h3 className="text-white font-medium">{game.author}</h3>
+                <p className="text-gray-400 text-xs">Verified Developer</p>
+              </div>
+              <button className="ml-4 bg-white text-black font-semibold px-4 py-2 rounded-full hover:bg-gray-200">Subscribe</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-gray-800 rounded-full overflow-hidden">
+                <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-700 text-white border-r border-gray-700"><ThumbsUp size={18} /> Like</button>
+                <button className="px-4 py-2 hover:bg-gray-700 text-white"><ThumbsUp size={18} className="rotate-180" /></button>
+              </div>
+              <button className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-full"><Share2 size={18} /> Share</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="lg:w-[400px] flex flex-col gap-3">
+        <h3 className="text-white font-semibold mb-1">Recommended</h3>
+        {related.map(rel => (
+          <div key={rel.id} className="flex gap-2 cursor-pointer group" onClick={() => onBack(rel)}>
+            <div className="w-40 h-24 rounded-lg overflow-hidden flex-shrink-0">
+              <img src={rel.thumb} className="w-full h-full object-cover" alt="" />
+            </div>
+            <div className="flex flex-col">
+              <h4 className="text-white text-sm font-medium line-clamp-2">{rel.title}</h4>
+              <span className="text-gray-400 text-xs mt-1">{rel.author}</span>
+              <span className="text-gray-400 text-xs">{rel.views} plays</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeGame, setActiveGame] = useState(null);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] text-white">
+      <Navbar onHomeClick={() => setActiveGame(null)} toggleSidebar={toggleSidebar} />
+      <div className="flex pt-14 h-screen overflow-hidden">
+        <Sidebar isOpen={sidebarOpen} activeGame={activeGame} />
+        <main className={`flex-1 overflow-y-auto transition-all ${!activeGame ? (sidebarOpen ? 'ml-60' : 'ml-[72px]') : 'ml-0'}`}>
+          {activeGame ? <PlayerView game={activeGame} onBack={setActiveGame} /> : <GameGrid onPlayGame={setActiveGame} />}
+        </main>
+      </div>
+    </div>
+  );
+}
